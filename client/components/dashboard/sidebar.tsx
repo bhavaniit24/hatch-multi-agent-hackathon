@@ -58,7 +58,7 @@ export function DashboardSidebar() {
       <div className="flex h-14 items-center border-b px-4">
         <Link href="/" className="flex items-center gap-2 font-semibold">
           <TrendingUp className="h-5 w-5 text-primary" />
-          <span>StockSense AI</span>
+          <span>FinAIze</span>
         </Link>
       </div>
       <div className="flex-1 overflow-auto py-2">

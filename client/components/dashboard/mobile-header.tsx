@@ -23,7 +23,7 @@ export function MobileHeader() {
       </Sheet>
       <Link href="/" className="flex items-center gap-2 font-semibold">
         <TrendingUp className="h-5 w-5 text-primary" />
-        <span>StockSense AI</span>
+        <span>FinAIze</span>
       </Link>
       <div className="ml-auto">
         <ModeToggle />

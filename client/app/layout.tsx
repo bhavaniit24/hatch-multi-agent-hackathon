@@ -9,7 +9,7 @@ import { StockAnalysisProvider } from "@/context/stock-analysis-context"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "StockSense AI | Smart Investment Recommendations",
+  title: "FinAIze | Smart Investment Recommendations",
   description: "AI-powered stock market analysis and investment recommendations",
     generator: 'v0.dev'
 }
