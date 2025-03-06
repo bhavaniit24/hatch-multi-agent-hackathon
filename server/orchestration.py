@@ -149,6 +149,10 @@ async def run_analysis(
     workflow = create_workflow(symbols, timeframe)
     app = workflow.compile()
 
+    graph = app.get_graph(xray=True).draw_mermaid_png()  # Generate the graph
+    with open("graph_image.png", "wb") as f:
+        f.write(graph)
+
     # Initialize state
     initial_state = {
         "messages": [],
