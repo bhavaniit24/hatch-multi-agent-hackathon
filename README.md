@@ -49,12 +49,9 @@ venv\Scripts\activate
 ## Install dependencies
 
 ```bash
-pip3 install poetry
+pip3 install -r requirements.txt
 ````
 
-```bash
-poetry install
-```
 
 ## Run the server
 
