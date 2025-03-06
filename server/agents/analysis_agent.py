@@ -15,77 +15,29 @@ class AnalysisAgent(BaseAgent):
         self.llm_client = LLMClient()
     
     async def run(self, inputs: Dict[str, Any], config: RunnableConfig) -> Dict[str, Any]:
-        """Analyze stock data and calculate performance metrics.
-        
-        Args:
-            inputs (Dict[str, Any]): Processed data from DataProcessingAgent and user preferences
-            config (RunnableConfig): Configuration for the execution
-            
-        Returns:
-            Dict[str, Any]: Analysis results for each stock
-        """
         analysis_results = {}
         preferences = inputs.get('preferences', {})
         ai_settings = inputs.get('ai_settings', {})
         
         print(f"[AnalysisAgent] Starting analysis with AI settings: {ai_settings}")
         
-        # Adjust metrics based on user preferences
-        if preferences.get('risk_tolerance'):
-            risk_level = preferences['risk_tolerance']
-            if risk_level == 'conservative':
-                self.metrics = ['volatility', 'moving_averages', 'relative_strength']
-            elif risk_level == 'moderate':
-                self.metrics = ['price_momentum', 'volume_analysis', 'moving_averages', 'relative_strength']
-            elif risk_level == 'aggressive':
-                self.metrics = ['price_momentum', 'volume_analysis', 'relative_strength']
-        
+        # Process stocks based on preferences
+        stock_count = 0
         for api, data in inputs.items():
-            if api in ['preferences', 'ai_settings']:
-                continue
+            if stock_count >= 5  or api in ['ai_settings']:
+                break
                 
             try:
-                print(f"[AnalysisAgent] Processing data for {api}")
-                df = pd.DataFrame(data)
-                metrics_results = {}
                 
-                # Calculate traditional metrics
-                if 'price_momentum' in self.metrics:
-                    metrics_results['momentum'] = self._calculate_momentum(df)
-                
-                if 'volume_analysis' in self.metrics:
-                    metrics_results['volume'] = self._analyze_volume(df)
-                
-                if 'volatility' in self.metrics:
-                    metrics_results['volatility'] = self._calculate_volatility(df)
-                
-                if 'moving_averages' in self.metrics:
-                    metrics_results['moving_averages'] = self._calculate_moving_averages(df)
-                
-                if 'relative_strength' in self.metrics:
-                    metrics_results['relative_strength'] = self._calculate_relative_strength(df)
-                
-                # Get LLM analysis
-                stock_data = {
-                    'symbol': api,
-                    'price': float(df['close'].iloc[-1]),
-                    'change': float(((df['close'].iloc[-1] - df['close'].iloc[0]) / df['close'].iloc[0]) * 100),
-                    'volume': float(df['volume'].mean()),
-                    'marketCap': data.get('market_cap', 'N/A'),
-                    'sector': data.get('sector', 'N/A'),
-                    'aiScore': float(metrics_results.get('relative_strength', {}).get('rsi', 50))
-                }
-                
-                print(f"[AnalysisAgent] Calling LLM for {api} with data: {stock_data}")
-                llm_analysis = await self.llm_client.analyze_stock(stock_data, ai_settings)
+                print(f"[AnalysisAgent] Calling LLM for {api} with data: {preferences}")
+                llm_analysis = await self.llm_client.analyze_stock(preferences, ai_settings)
                 print(f"[AnalysisAgent] LLM analysis for {api}: {llm_analysis}")
-                metrics_results['llm_analysis'] = llm_analysis
                 
-                # Adjust analysis weights based on investment goals
-                if preferences.get('investment_goals'):
-                    metrics_results = self._adjust_metrics_by_goals(metrics_results, preferences['investment_goals'])
+                analysis_results[api] = {
+                    'llm_analysis': llm_analysis
+                }
+                stock_count += 1
                 
-                analysis_results[api] = metrics_results
             except Exception as e:
                 error_msg = f"Error analyzing {api}: {str(e)}"
                 print(f"[AnalysisAgent] {error_msg}")

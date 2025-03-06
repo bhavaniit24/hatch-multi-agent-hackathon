@@ -55,12 +55,7 @@ class LLMClient:
             
             # Format the response to match the frontend expectations
             recommendation = {
-                'symbol': stock_data['symbol'],
-                'name': stock_data['name'],
-                'price': stock_data['current_price'],
-                'change': stock_data['price_change_percentage'],
                 'aiScore': self._calculate_ai_score(analysis),
-                'sector': stock_data['sector'],
                 'reason': self._extract_key_insights(analysis)
             }
             
