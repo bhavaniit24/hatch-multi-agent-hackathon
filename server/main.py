@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Any
 import uvicorn
 from orchestration import run_analysis
 import asyncio
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # Define input models for request validation
@@ -43,7 +44,17 @@ app = FastAPI(
 )
 
 
-@app.post("/api/analyze", response_model=AnalysisResponse)
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.post("/api/analyze")
 async def analyze_stocks(request: AnalysisRequest = Body(...)):
     """
     Analyze stock symbols based on provided criteria and preferences.
