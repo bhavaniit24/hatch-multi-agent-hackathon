@@ -3,20 +3,34 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, TrendingUp } from "lucide-react"
+import { ArrowRight, TrendingUp, Sliders } from "lucide-react"
 import Link from "next/link"
 
 export function AIRecommendations() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" />
-          AI Recommendations
-        </CardTitle>
-        <CardDescription>Personalized stock recommendations based on market analysis</CardDescription>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            AI Recommendations
+          </CardTitle>
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/preferences">
+              <Sliders className="h-4 w-4" />
+              <span className="sr-only">Customize Preferences</span>
+            </Link>
+          </Button>
+        </div>
+        <CardDescription>Personalized stock recommendations based on your preferences</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex flex-wrap gap-2 mb-2">
+          <Badge variant="outline">1 Year Timeframe</Badge>
+          <Badge variant="outline">Large Cap</Badge>
+          <Badge variant="outline">Moderate Risk</Badge>
+        </div>
+
         {recommendations.map((recommendation, index) => (
           <div key={index} className="space-y-2">
             <div className="flex items-center justify-between">

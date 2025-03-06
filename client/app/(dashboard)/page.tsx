@@ -1,9 +1,9 @@
 import { MarketOverview } from "@/components/dashboard/market-overview"
 import { TopStocks } from "@/components/dashboard/top-stocks"
 import { StockSearch } from "@/components/dashboard/stock-search"
-import { RecentNews } from "@/components/dashboard/recent-news"
 import { AIRecommendations } from "@/components/dashboard/ai-recommendations"
 import { MarketSentiment } from "@/components/dashboard/market-sentiment"
+import { UserPreferencesForm } from "@/components/user-preferences-form"
 
 export default function DashboardPage() {
   return (
@@ -21,7 +21,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <MarketSentiment />
         <AIRecommendations />
-        <RecentNews />
+        <UserPreferencesForm />
       </div>
 
       <TopStocks />

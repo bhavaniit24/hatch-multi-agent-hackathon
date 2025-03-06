@@ -1,0 +1,14 @@
+langchain
+langchain-core
+langchain-experimental
+langchain-community
+langchain-openai
+langgraph
+requests
+pandas
+numpy
+python-dotenv
+fastapi
+uvicorn
+langgraph.prebuilt
+dotenv

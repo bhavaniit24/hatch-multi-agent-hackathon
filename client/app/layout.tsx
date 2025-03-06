@@ -4,11 +4,12 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { StockAnalysisProvider } from "@/context/stock-analysis-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "StockSense AI | Multi-Agent Stock Analysis",
+  title: "StockSense AI | Smart Investment Recommendations",
   description: "AI-powered stock market analysis and investment recommendations",
     generator: 'v0.dev'
 }
@@ -22,8 +23,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster />
+          <StockAnalysisProvider>
+            {children}
+            <Toaster />
+          </StockAnalysisProvider>
         </ThemeProvider>
       </body>
     </html>

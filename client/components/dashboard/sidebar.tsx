@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Home, LineChart, List, Search, Settings, Star, TrendingUp } from "lucide-react"
+import { BarChart3, Home, LineChart, List, Search, Settings, Star, TrendingUp, Sliders } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
@@ -45,6 +45,11 @@ export function DashboardSidebar() {
       name: "Analytics",
       href: "/analytics",
       icon: LineChart,
+    },
+    {
+      name: "Preferences",
+      href: "/preferences",
+      icon: Sliders,
     },
   ]
 
