@@ -55,3 +55,9 @@ pip3 install poetry
 ```bash
 poetry install
 ```
+
+## Run the server
+
+```bash
+poetry run python src/main.py
+```
