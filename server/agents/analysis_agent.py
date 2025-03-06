@@ -4,6 +4,7 @@ from langchain_core.runnables import RunnableConfig
 import pandas as pd
 import numpy as np
 from .base_agent import BaseAgent
+from .llm_client import LLMClient  # Fixed import path
 
 class AnalysisAgent(BaseAgent):
     """Agent responsible for analyzing stock market data and calculating metrics."""
@@ -11,6 +12,7 @@ class AnalysisAgent(BaseAgent):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         self.metrics = self.config['metrics']
+        self.llm_client = LLMClient()
     
     async def run(self, inputs: Dict[str, Any], config: RunnableConfig) -> Dict[str, Any]:
         """Analyze stock data and calculate performance metrics.
@@ -24,6 +26,7 @@ class AnalysisAgent(BaseAgent):
         """
         analysis_results = {}
         preferences = inputs.get('preferences', {})
+        ai_settings = inputs.get('ai_settings', {})
         
         # Adjust metrics based on user preferences
         if preferences.get('risk_tolerance'):
@@ -36,13 +39,14 @@ class AnalysisAgent(BaseAgent):
                 self.metrics = ['price_momentum', 'volume_analysis', 'relative_strength']
         
         for api, data in inputs.items():
-            if api == 'preferences':
+            if api in ['preferences', 'ai_settings']:
                 continue
                 
             try:
                 df = pd.DataFrame(data)
                 metrics_results = {}
                 
+                # Calculate traditional metrics
                 if 'price_momentum' in self.metrics:
                     metrics_results['momentum'] = self._calculate_momentum(df)
                 
@@ -57,6 +61,20 @@ class AnalysisAgent(BaseAgent):
                 
                 if 'relative_strength' in self.metrics:
                     metrics_results['relative_strength'] = self._calculate_relative_strength(df)
+                
+                # Get LLM analysis
+                stock_data = {
+                    'symbol': api,
+                    'price': df['close'].iloc[-1],
+                    'change': ((df['close'].iloc[-1] - df['close'].iloc[0]) / df['close'].iloc[0]) * 100,
+                    'volume': df['volume'].mean(),
+                    'marketCap': data.get('market_cap', 'N/A'),
+                    'sector': data.get('sector', 'N/A'),
+                    'aiScore': metrics_results.get('relative_strength', {}).get('rsi', 50)
+                }
+                
+                llm_analysis = await self.llm_client.analyze_stock(stock_data, ai_settings)
+                metrics_results['llm_analysis'] = llm_analysis
                 
                 # Adjust analysis weights based on investment goals
                 if preferences.get('investment_goals'):
