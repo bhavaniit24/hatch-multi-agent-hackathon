@@ -18,21 +18,38 @@ class DataProcessingAgent(BaseAgent):
         """Process and clean the stock market data.
         
         Args:
-            inputs (Dict[str, Any]): Raw data from multiple APIs
+            inputs (Dict[str, Any]): Raw data from multiple APIs and user preferences
             config (RunnableConfig): Configuration for the execution
             
         Returns:
             Dict[str, Any]: Processed and cleaned data
         """
         processed_data = {}
+        preferences = inputs.get('preferences', {})
+        
+        # Adjust cleaning rules based on user risk tolerance
+        if preferences.get('risk_tolerance'):
+            risk_level = preferences['risk_tolerance']
+            if risk_level == 'conservative':
+                self.cleaning_rules['handle_outliers'] = True
+                self.cleaning_rules['remove_nulls'] = True
+            elif risk_level == 'aggressive':
+                self.cleaning_rules['handle_outliers'] = False
         
         for api, data in inputs.items():
+            if api == 'preferences':
+                continue
+                
             try:
                 df = self._convert_to_dataframe(data)
                 df = self._apply_cleaning_rules(df)
                 
                 if self.normalization:
                     df = self._normalize_data(df)
+                
+                # Apply sector filtering if specified in preferences
+                if preferences.get('preferred_sectors'):
+                    df = self._filter_by_sectors(df, preferences['preferred_sectors'])
                 
                 processed_data[api] = df.to_dict(orient='records')
             except Exception as e:

@@ -16,15 +16,29 @@ class AnalysisAgent(BaseAgent):
         """Analyze stock data and calculate performance metrics.
         
         Args:
-            inputs (Dict[str, Any]): Processed data from DataProcessingAgent
+            inputs (Dict[str, Any]): Processed data from DataProcessingAgent and user preferences
             config (RunnableConfig): Configuration for the execution
             
         Returns:
             Dict[str, Any]: Analysis results for each stock
         """
         analysis_results = {}
+        preferences = inputs.get('preferences', {})
+        
+        # Adjust metrics based on user preferences
+        if preferences.get('risk_tolerance'):
+            risk_level = preferences['risk_tolerance']
+            if risk_level == 'conservative':
+                self.metrics = ['volatility', 'moving_averages', 'relative_strength']
+            elif risk_level == 'moderate':
+                self.metrics = ['price_momentum', 'volume_analysis', 'moving_averages', 'relative_strength']
+            elif risk_level == 'aggressive':
+                self.metrics = ['price_momentum', 'volume_analysis', 'relative_strength']
         
         for api, data in inputs.items():
+            if api == 'preferences':
+                continue
+                
             try:
                 df = pd.DataFrame(data)
                 metrics_results = {}
@@ -43,6 +57,10 @@ class AnalysisAgent(BaseAgent):
                 
                 if 'relative_strength' in self.metrics:
                     metrics_results['relative_strength'] = self._calculate_relative_strength(df)
+                
+                # Adjust analysis weights based on investment goals
+                if preferences.get('investment_goals'):
+                    metrics_results = self._adjust_metrics_by_goals(metrics_results, preferences['investment_goals'])
                 
                 analysis_results[api] = metrics_results
             except Exception as e:

@@ -23,14 +23,41 @@ class StrategyAgent(BaseAgent):
             Dict[str, Any]: Top 5 ranked stocks with scores
         """
         try:
+            preferences = inputs.get('preferences', {})
+            
+            # Adjust ranking factors based on user preferences
+            if preferences.get('risk_tolerance'):
+                risk_level = preferences['risk_tolerance']
+                if risk_level == 'conservative':
+                    self.ranking_factors = ['risk_metrics', 'technical_indicators']
+                    self.weight_scheme = {
+                        'risk_metrics': 0.7,
+                        'technical_indicators': 0.3
+                    }
+                elif risk_level == 'moderate':
+                    self.ranking_factors = ['performance', 'risk_metrics', 'technical_indicators']
+                    self.weight_scheme = {
+                        'performance': 0.4,
+                        'risk_metrics': 0.3,
+                        'technical_indicators': 0.3
+                    }
+                elif risk_level == 'aggressive':
+                    self.ranking_factors = ['performance', 'market_sentiment', 'technical_indicators']
+                    self.weight_scheme = {
+                        'performance': 0.5,
+                        'market_sentiment': 0.3,
+                        'technical_indicators': 0.2
+                    }
+            
             # Convert analysis results to a format suitable for ranking
             stock_scores = self._calculate_stock_scores(inputs)
             
             # Rank stocks based on composite scores
             ranked_stocks = self._rank_stocks(stock_scores)
             
-            # Get top 5 stocks with detailed scores
-            top_stocks = self._get_top_stocks(ranked_stocks, limit=5)
+            # Adjust number of top stocks based on preferences
+            limit = preferences.get('max_recommendations', 5)
+            top_stocks = self._get_top_stocks(ranked_stocks, limit=limit)
             
             return {
                 'top_stocks': top_stocks,
