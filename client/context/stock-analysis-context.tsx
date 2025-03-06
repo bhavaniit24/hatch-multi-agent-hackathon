@@ -62,18 +62,8 @@ export function StockAnalysisProvider({ children }: { children: React.ReactNode 
                 },
                 body: JSON.stringify({
                     symbols: ['AAPL', 'GOOGL', 'MSFT'],
-                    ai_settings: {
-                        model: 'gpt-4o',
-                        temperature: 0.7,
-                    },
-                    investment_preferences: {
-                        timeframe: '1year',
-                        performanceCriteria: ['price', 'growth'],
-                        sectors: ['technology'],
-                        marketCap: ['large'],
-                        riskTolerance: 3,
-                        dividendPreference: false,
-                    },
+                    ai_settings: aiSettings,
+                    investment_preferences: preferences,
                 }),
             });
             const data = await response.json();
