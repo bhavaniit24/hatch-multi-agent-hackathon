@@ -90,8 +90,6 @@ async def analyze_stocks(request: AnalysisRequest = Body(...)):
 
         # Run the analysis with additional context from preferences
         results = await run_analysis(
-            request.symbols,
-            analysis_timeframe,
             preferences={
                 "performance_criteria": investment_preferences.performanceCriteria,
                 "sectors": investment_preferences.sectors,
@@ -103,6 +101,7 @@ async def analyze_stocks(request: AnalysisRequest = Body(...)):
                 "model": ai_settings.model,
                 "temperature": ai_settings.temperature,
             },
+            timeframe=analysis_timeframe,
         )
 
         return results

@@ -24,11 +24,12 @@ class WorkflowState(TypedDict):
     errors: List[str]
 
 
-def create_workflow(symbols: List[str], timeframe: str = "1d") -> StateGraph:
+def create_workflow(preferences: Dict[str, Any] = {}, ai_config: Dict[str, Any] = {}, timeframe: str = "1d") -> StateGraph:
     """Create the stock analysis workflow graph.
 
     Args:
-        symbols: List of stock symbols to analyze
+        preferences: User investment preferences
+        ai_config: AI model configuration
         timeframe: Time period for analysis
 
     Returns:
@@ -54,7 +55,11 @@ def create_workflow(symbols: List[str], timeframe: str = "1d") -> StateGraph:
     # Data fetching step
     async def fetch_data(state: WorkflowState) -> WorkflowState:
         try:
-            inputs = {"symbols": symbols, "timeframe": timeframe}
+            inputs = {
+                "timeframe": timeframe,
+                "preferences": preferences,
+                "ai_config": ai_config
+            }
             state["stock_data"] = await data_fetching.run(inputs, {})
             state["current_step"] = "process_data"
         except Exception as e:
@@ -73,7 +78,13 @@ def create_workflow(symbols: List[str], timeframe: str = "1d") -> StateGraph:
     # Analysis step
     async def analyze_data(state: WorkflowState) -> WorkflowState:
         try:
-            state["analysis_results"] = await analysis.run(state["processed_data"], {})
+            inputs = {
+                **state["processed_data"],
+                "preferences": preferences,
+                "ai_settings": ai_config
+            }
+            print(f"[Orchestration] Running analysis with AI config: {ai_config}")
+            state["analysis_results"] = await analysis.run(inputs, {})
             state["current_step"] = "apply_strategy"
         except Exception as e:
             state["errors"].append(f"Analysis error: {str(e)}")
@@ -82,9 +93,11 @@ def create_workflow(symbols: List[str], timeframe: str = "1d") -> StateGraph:
     # Strategy application step
     async def apply_strategy(state: WorkflowState) -> WorkflowState:
         try:
-            state["strategy_results"] = await strategy.run(
-                state["analysis_results"], {}
-            )
+            inputs = {
+                **state["analysis_results"],
+                "preferences": preferences
+            }
+            state["strategy_results"] = await strategy.run(inputs, {})
             state["current_step"] = "generate_report"
         except Exception as e:
             state["errors"].append(f"Strategy error: {str(e)}")
@@ -127,31 +140,28 @@ def create_workflow(symbols: List[str], timeframe: str = "1d") -> StateGraph:
     return workflow
 
 
-# ... previous code remains unchanged ...
-
-
 async def run_analysis(
-    symbols: List[str],
-    timeframe: str = "1d",
     preferences: Dict[str, Any] = {},
     ai_config: Dict[str, Any] = {},
+    timeframe: str = "1d"
 ) -> Dict[str, Any]:
     """Run the complete stock analysis workflow.
 
     Args:
-        symbols: List of stock symbols to analyze
+        preferences: User investment preferences
+        ai_config: AI model configuration
         timeframe: Time period for analysis
 
     Returns:
-        Dict[str, Any]: Analysis results and final report
+        Dict[str, Any]: Analysis results and final report with top stock recommendations
     """
     # Create and compile workflow
-    workflow = create_workflow(symbols, timeframe)
+    workflow = create_workflow(preferences, ai_config, timeframe)
     app = workflow.compile()
 
-    graph = app.get_graph(xray=True).draw_mermaid_png()  # Generate the graph
-    with open("graph_image.png", "wb") as f:
-        f.write(graph)
+    # graph = app.get_graph(xray=True).draw_mermaid_png()  # Generate the graph
+    # with open("graph_image.png", "wb") as f:
+    #     f.write(graph)
 
     # Initialize state
     initial_state = {
@@ -171,9 +181,18 @@ async def run_analysis(
     if final_state["errors"]:
         return {"status": "error", "errors": final_state["errors"]}
 
+    # Extract topStocks from strategy results
+    top_stocks = final_state["strategy_results"].get("top_stocks", [])
+
     return {
         "status": "success",
+        "topStocks": top_stocks,  # Include topStocks in the response
         "report": final_state["final_report"],
         "analysis": final_state["analysis_results"],
         "strategy": final_state["strategy_results"],
+        "metadata": {
+            "aiConfig": ai_config,
+            "preferences": preferences,
+            "timeframe": timeframe
+        }
     }

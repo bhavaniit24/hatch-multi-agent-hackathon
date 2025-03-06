@@ -28,6 +28,8 @@ class AnalysisAgent(BaseAgent):
         preferences = inputs.get('preferences', {})
         ai_settings = inputs.get('ai_settings', {})
         
+        print(f"[AnalysisAgent] Starting analysis with AI settings: {ai_settings}")
+        
         # Adjust metrics based on user preferences
         if preferences.get('risk_tolerance'):
             risk_level = preferences['risk_tolerance']
@@ -43,6 +45,7 @@ class AnalysisAgent(BaseAgent):
                 continue
                 
             try:
+                print(f"[AnalysisAgent] Processing data for {api}")
                 df = pd.DataFrame(data)
                 metrics_results = {}
                 
@@ -65,15 +68,17 @@ class AnalysisAgent(BaseAgent):
                 # Get LLM analysis
                 stock_data = {
                     'symbol': api,
-                    'price': df['close'].iloc[-1],
-                    'change': ((df['close'].iloc[-1] - df['close'].iloc[0]) / df['close'].iloc[0]) * 100,
-                    'volume': df['volume'].mean(),
+                    'price': float(df['close'].iloc[-1]),
+                    'change': float(((df['close'].iloc[-1] - df['close'].iloc[0]) / df['close'].iloc[0]) * 100),
+                    'volume': float(df['volume'].mean()),
                     'marketCap': data.get('market_cap', 'N/A'),
                     'sector': data.get('sector', 'N/A'),
-                    'aiScore': metrics_results.get('relative_strength', {}).get('rsi', 50)
+                    'aiScore': float(metrics_results.get('relative_strength', {}).get('rsi', 50))
                 }
                 
+                print(f"[AnalysisAgent] Calling LLM for {api} with data: {stock_data}")
                 llm_analysis = await self.llm_client.analyze_stock(stock_data, ai_settings)
+                print(f"[AnalysisAgent] LLM analysis for {api}: {llm_analysis}")
                 metrics_results['llm_analysis'] = llm_analysis
                 
                 # Adjust analysis weights based on investment goals
@@ -82,7 +87,9 @@ class AnalysisAgent(BaseAgent):
                 
                 analysis_results[api] = metrics_results
             except Exception as e:
-                self.update_state(f'error_analysis_{api}', str(e))
+                error_msg = f"Error analyzing {api}: {str(e)}"
+                print(f"[AnalysisAgent] {error_msg}")
+                self.update_state(f'error_analysis_{api}', error_msg)
         
         return analysis_results
     

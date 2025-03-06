@@ -68,7 +68,7 @@ class StrategyAgent(BaseAgent):
             return {}
     
     def _calculate_stock_scores(self, analysis_results: Dict[str, Any]) -> Dict[str, float]:
-        """Calculate composite scores for each stock based on analysis metrics."""
+        """Calculate composite scores for each stock based on analysis metrics and LLM insights."""
         stock_scores = {}
         
         for stock, metrics in analysis_results.items():
@@ -93,6 +93,11 @@ class StrategyAgent(BaseAgent):
             if 'technical_indicators' in self.ranking_factors:
                 tech_score = self._calculate_technical_score(metrics)
                 score += tech_score * self.weight_scheme['technical_indicators']
+            
+            # Incorporate LLM analysis score
+            if 'llm_analysis' in metrics:
+                llm_score = metrics['llm_analysis'].get('confidence_score', 0.5)
+                score = score * 0.7 + llm_score * 0.3  # Blend traditional and AI analysis
             
             stock_scores[stock] = score
         

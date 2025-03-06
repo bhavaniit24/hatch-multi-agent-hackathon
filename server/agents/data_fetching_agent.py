@@ -18,29 +18,49 @@ class DataFetchingAgent(BaseAgent):
         self.retry_attempts = self.config['retry_attempts']
     
     async def run(self, inputs: Dict[str, Any], config: RunnableConfig) -> Dict[str, Any]:
-        """Fetch stock data from multiple APIs based on input parameters.
+        """Fetch and analyze market data to discover potential stocks.
         
         Args:
-            inputs (Dict[str, Any]): Contains parameters like symbols, timeframe, etc.
+            inputs (Dict[str, Any]): Contains preferences, timeframe, and AI config
             config (RunnableConfig): Configuration for the execution
             
         Returns:
-            Dict[str, Any]: Collected data from all APIs
+            Dict[str, Any]: Collected and analyzed market data
         """
         results = {}
-        symbols = inputs.get('symbols', [])
+        preferences = inputs.get('preferences', {})
         timeframe = inputs.get('timeframe', '1d')
+        ai_config = inputs.get('ai_config', {})
         
-        for api in self.apis:
-            try:
-                if api == 'alpha_vantage':
-                    results['alpha_vantage'] = self._fetch_alpha_vantage(symbols, timeframe)
-                elif api == 'polygon':
-                    results['polygon'] = self._fetch_polygon(symbols, timeframe)
-                elif api == 'finhub':
-                    results['finhub'] = self._fetch_finhub(symbols, timeframe)
-            except Exception as e:
-                self.update_state(f'error_{api}', str(e))
+        try:
+            # Get market overview and sector performance
+            market_data = self._fetch_market_overview()
+            
+            # Use preferences to filter sectors and get top performing stocks
+            preferred_sectors = preferences.get('preferred_sectors', [])
+            risk_tolerance = preferences.get('risk_tolerance', 'moderate')
+            
+            # Get potential stocks based on market analysis and preferences
+            potential_stocks = self._discover_potential_stocks(market_data, preferred_sectors, risk_tolerance)
+            
+            # Fetch detailed data for potential stocks
+            for symbol in potential_stocks[:20]:  # Limit to top 20 for detailed analysis
+                try:
+                    stock_data = {}
+                    if 'alpha_vantage' in self.apis:
+                        stock_data.update(self._fetch_alpha_vantage([symbol], timeframe))
+                    if 'polygon' in self.apis:
+                        stock_data.update(self._fetch_polygon([symbol], timeframe))
+                    if 'finhub' in self.apis:
+                        stock_data.update(self._fetch_finhub([symbol], timeframe))
+                    
+                    results[symbol] = stock_data
+                except Exception as e:
+                    self.update_state(f'error_fetching_{symbol}', str(e))
+                    continue
+            
+        except Exception as e:
+            self.update_state('error_market_analysis', str(e))
         
         return results
     
