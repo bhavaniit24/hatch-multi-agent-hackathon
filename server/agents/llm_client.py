@@ -50,9 +50,24 @@ class LLMClient:
                 model=model_name
             )
             
-            # Process and return the analysis
+            # Extract and structure the analysis
+            analysis = response.choices[0].message.content
+            
+            # Format the response to match the frontend expectations
+            recommendation = {
+                'symbol': stock_data['symbol'],
+                'name': stock_data['name'],
+                'price': stock_data['current_price'],
+                'change': stock_data['price_change_percentage'],
+                'aiScore': self._calculate_ai_score(analysis),
+                'sector': stock_data['sector'],
+                'reason': self._extract_key_insights(analysis)
+            }
+            
             return {
-                'analysis': response.choices[0].message.content,
+                'status': 'success',
+                'analysis': analysis,
+                'recommendation': recommendation,
                 'model_used': model_name,
                 'confidence': 1.0 - temperature
             }
@@ -60,9 +75,29 @@ class LLMClient:
         except Exception as e:
             print(f"Error in LLM analysis: {str(e)}")
             return {
+                'status': 'error',
                 'error': str(e),
                 'analysis': None
             }
+            
+    def _calculate_ai_score(self, analysis: str) -> int:
+        # Implement scoring logic based on sentiment and key metrics
+        # Returns a score between 0-100
+        # This is a simplified example
+        positive_indicators = ['strong', 'growth', 'positive', 'recommend', 'buy']
+        score = 50  # Base score
+        
+        for indicator in positive_indicators:
+            if indicator in analysis.lower():
+                score += 10
+        
+        return min(max(score, 0), 100)
+    
+    def _extract_key_insights(self, analysis: str) -> str:
+        # Extract the most relevant insight from the analysis
+        # This is a simplified example
+        sentences = analysis.split('.')
+        return sentences[0].strip() if sentences else "Analysis not available"
     
     def _prepare_stock_analysis_prompt(self, stock_data: Dict[str, Any]) -> str:
         """Prepare a prompt for stock analysis.

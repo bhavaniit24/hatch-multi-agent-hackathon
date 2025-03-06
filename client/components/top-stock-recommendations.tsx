@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowUpDown, ExternalLink, RefreshCw, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
-import { useStockAnalysis } from '@/context/stock-analysis-context';
+import { Stock, useStockAnalysis } from '@/context/stock-analysis-context';
 
 export function TopStockRecommendations() {
     const [activeTab, setActiveTab] = useState('all');
-    const { preferences, isAnalyzing, analyzeStocks, lastUpdated } = useStockAnalysis();
+    const { preferences, isAnalyzing, analyzeStocks, lastUpdated, topStocks } = useStockAnalysis();
 
     const getTimeframeLabel = (timeframe: string) => {
         const labels: Record<string, string> = {
@@ -24,6 +24,10 @@ export function TopStockRecommendations() {
         };
         return labels[timeframe] || 'Custom Timeframe';
     };
+
+    if (!topStocks || topStocks.length === 0) {
+        return null
+    }
 
     return (
         <Card>
@@ -73,19 +77,19 @@ export function TopStockRecommendations() {
                     </TabsList>
 
                     <TabsContent value="all">
-                        <StockTable stocks={getFilteredStocks('all')} />
+                        <StockTable stocks={getFilteredStocks(topStocks, 'all')} />
                     </TabsContent>
 
                     <TabsContent value="tech">
-                        <StockTable stocks={getFilteredStocks('tech')} />
+                        <StockTable stocks={getFilteredStocks(topStocks, 'tech')} />
                     </TabsContent>
 
                     <TabsContent value="finance">
-                        <StockTable stocks={getFilteredStocks('finance')} />
+                        <StockTable stocks={getFilteredStocks(topStocks, 'finance')} />
                     </TabsContent>
 
                     <TabsContent value="healthcare">
-                        <StockTable stocks={getFilteredStocks('healthcare')} />
+                        <StockTable stocks={getFilteredStocks(topStocks, 'healthcare')} />
                     </TabsContent>
                 </Tabs>
             </CardContent>
@@ -181,7 +185,7 @@ function getRiskLabel(value: number): string {
     }
 }
 
-function getFilteredStocks(sector: string): Stock[] {
+function getFilteredStocks(topStocks: Stock[], sector: string): Stock[] {
     if (sector === 'all') {
         return topStocks.slice(0, 5);
     }
@@ -195,87 +199,3 @@ function getFilteredStocks(sector: string): Stock[] {
     return topStocks.filter(stock => stock.sector === sectorMap[sector]).slice(0, 5);
 }
 
-interface Stock {
-    symbol: string;
-    name: string;
-    price: number;
-    change: number;
-    aiScore: number;
-    sector: string;
-    reason: string;
-}
-
-const topStocks: Stock[] = [
-    {
-        symbol: 'NVDA',
-        name: 'NVIDIA Corporation',
-        price: 877.35,
-        change: 3.56,
-        aiScore: 96,
-        sector: 'Technology',
-        reason: 'Strong AI market growth and dominant position in GPU market',
-    },
-    {
-        symbol: 'MSFT',
-        name: 'Microsoft Corporation',
-        price: 417.88,
-        change: 0.78,
-        aiScore: 94,
-        sector: 'Technology',
-        reason: 'Cloud business expansion and AI integration across product lines',
-    },
-    {
-        symbol: 'AAPL',
-        name: 'Apple Inc.',
-        price: 173.57,
-        change: 1.23,
-        aiScore: 92,
-        sector: 'Technology',
-        reason: 'Strong ecosystem, consistent revenue growth, and robust cash flow',
-    },
-    {
-        symbol: 'JPM',
-        name: 'JPMorgan Chase & Co.',
-        price: 198.47,
-        change: -0.23,
-        aiScore: 89,
-        sector: 'Financial',
-        reason: 'Strong financial position, diversified revenue streams, and dividend growth',
-    },
-    {
-        symbol: 'UNH',
-        name: 'UnitedHealth Group Inc.',
-        price: 527.33,
-        change: 1.45,
-        aiScore: 87,
-        sector: 'Healthcare',
-        reason: 'Market leader in healthcare services with consistent earnings growth',
-    },
-    {
-        symbol: 'V',
-        name: 'Visa Inc.',
-        price: 274.56,
-        change: 0.67,
-        aiScore: 86,
-        sector: 'Financial',
-        reason: 'Global payment network with high margins and strong cash flow',
-    },
-    {
-        symbol: 'JNJ',
-        name: 'Johnson & Johnson',
-        price: 147.52,
-        change: 0.12,
-        aiScore: 85,
-        sector: 'Healthcare',
-        reason: 'Diversified healthcare company with stable dividend growth',
-    },
-    {
-        symbol: 'AMZN',
-        name: 'Amazon.com Inc.',
-        price: 178.15,
-        change: 2.34,
-        aiScore: 84,
-        sector: 'Technology',
-        reason: 'E-commerce dominance and AWS cloud growth',
-    },
-];
